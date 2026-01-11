@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
     
     const filters = {
       emiten: searchParams.get('emiten') || undefined,
+      sector: searchParams.get('sector') || undefined,
       fromDate: searchParams.get('fromDate') || undefined,
       toDate: searchParams.get('toDate') || undefined,
       status: searchParams.get('status') || undefined,

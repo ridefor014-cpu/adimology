@@ -1,20 +1,39 @@
 import { NextResponse } from 'next/server';
-import { fetchWatchlist } from '@/lib/stockbit';
+import { fetchWatchlist, fetchEmitenInfo } from '@/lib/stockbit';
 import type { ApiResponse } from '@/lib/types';
 
 export async function GET() {
   try {
     const watchlistData = await fetchWatchlist();
-
-    const result: ApiResponse = {
-      success: true,
-      data: watchlistData as any, // Using any here because ApiResponse data structure is currently specific to stock analysis, might need to adjust ApiResponse type later or just return direct data
+    
+    // Fetch sector for each watchlist item in parallel
+    const items = watchlistData.data?.result || [];
+    const itemsWithSector = await Promise.all(
+      items.map(async (item: any) => {
+        try {
+          const emitenInfo = await fetchEmitenInfo(item.symbol || item.company_code);
+          return {
+            ...item,
+            sector: emitenInfo?.data?.sector || undefined
+          };
+        } catch {
+          return item; // Return without sector if fetch fails
+        }
+      })
+    );
+    
+    // Update the response with sector data
+    const updatedData = {
+      ...watchlistData,
+      data: {
+        ...watchlistData.data,
+        result: itemsWithSector
+      }
     };
 
-    // Or just return the data directly if we don't want to strictly follow ApiResponse structure for this simple endpoint
     return NextResponse.json({
       success: true,
-      data: watchlistData
+      data: updatedData
     });
 
   } catch (error) {

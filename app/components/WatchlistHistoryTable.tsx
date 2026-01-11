@@ -7,6 +7,7 @@ interface AnalysisRecord {
   id: number;
   from_date: string;
   emiten: string;
+  sector?: string;
   bandar?: string;
   barang_bandar?: number;
   rata_rata_bandar?: number;
@@ -24,6 +25,7 @@ export default function WatchlistHistoryTable() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     emiten: '',
+    sector: 'all',
     fromDate: '',
     toDate: '',
     status: 'all'
@@ -31,11 +33,28 @@ export default function WatchlistHistoryTable() {
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(0);
   const [sort, setSort] = useState({ column: 'from_date', direction: 'desc' });
+  const [sectors, setSectors] = useState<string[]>([]);
   const pageSize = 50;
+
+  useEffect(() => {
+    fetchSectors();
+  }, []);
 
   useEffect(() => {
     fetchHistory();
   }, [filters, page, sort]);
+
+  const fetchSectors = async () => {
+    try {
+      const response = await fetch('/api/sectors');
+      const json = await response.json();
+      if (json.success) {
+        setSectors(json.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching sectors:', error);
+    }
+  };
 
   // Debounced fetch for text inputs could be added, but manual trigger or loose effect is fine for now
   
@@ -48,6 +67,7 @@ export default function WatchlistHistoryTable() {
       });
 
       if (filters.emiten) params.append('emiten', filters.emiten);
+      if (filters.sector !== 'all') params.append('sector', filters.sector);
       if (filters.fromDate) params.append('fromDate', filters.fromDate);
       if (filters.toDate) params.append('toDate', filters.toDate);
       if (filters.status !== 'all') params.append('status', filters.status);
@@ -169,6 +189,23 @@ export default function WatchlistHistoryTable() {
             <option value="error">Error</option>
           </select>
         </div>
+
+        <div className="input-group" style={{ flex: '1 1 150px', marginBottom: 0 }}>
+          <label className="input-label compact-label">Sector</label>
+          <select
+            className="input-field compact-input"
+            value={filters.sector}
+            onChange={(e) => {
+              setFilters({ ...filters, sector: e.target.value });
+              setPage(0);
+            }}
+          >
+            <option value="all">All Sectors</option>
+            {sectors.map(sector => (
+              <option key={sector} value={sector}>{sector}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Table */}
@@ -223,7 +260,14 @@ export default function WatchlistHistoryTable() {
                     }}
                   >
                     <td style={{ padding: '0.75rem 1rem' }}>{formatDate(record.from_date)}</td>
-                    <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'var(--accent-primary)' }}>{record.emiten}</td>
+                    <td style={{ padding: '0.75rem 1rem' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>{record.emiten}</div>
+                      {record.sector && (
+                        <div style={{ fontSize: '0.7rem', color: '#999', marginTop: '2px' }}>
+                          {record.sector}
+                        </div>
+                      )}
+                    </td>
                     <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontSize: '0.95rem' }}>
                       {formatNumber(record.harga)}
                     </td>

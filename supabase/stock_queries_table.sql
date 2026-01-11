@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS stock_queries (
   id SERIAL PRIMARY KEY,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   emiten TEXT NOT NULL,
+  sector TEXT,
   from_date DATE,
   to_date DATE,
   bandar TEXT,
@@ -23,3 +24,4 @@ CREATE TABLE IF NOT EXISTS stock_queries (
 );
 
 CREATE INDEX IF NOT EXISTS idx_stock_queries_emiten ON stock_queries(emiten);
+CREATE INDEX IF NOT EXISTS idx_stock_queries_sector ON stock_queries(sector);

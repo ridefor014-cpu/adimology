@@ -115,6 +115,7 @@ export interface StockAnalysisResult {
   brokerSummary?: BrokerSummaryData;
   isFromHistory?: boolean;
   historyDate?: string;
+  sector?: string;
 }
 
 export interface ApiResponse {
@@ -134,6 +135,10 @@ export interface WatchlistItem {
   percent: string;      // Percentage from API (e.g., "-1.23")
   volume: number;
   frequency: number;
+  sector?: string;      // Sector information from emiten info API
+  formatted_price?: string;
+  formatted_change_point?: string;
+  formatted_change_percentage?: string;
 }
 
 export interface WatchlistMetaResponse {
@@ -152,3 +157,16 @@ export interface WatchlistDetailResponse {
 }
 
 export type WatchlistResponse = WatchlistDetailResponse; // Alias for backward compatibility if needed, or just use WatchlistDetailResponse
+
+export interface EmitenInfoResponse {
+  data: {
+    sector: string;
+    sub_sector: string;
+    symbol: string;
+    name: string;
+    price: string;
+    change: string;
+    percentage: number;
+  };
+  message: string;
+}

@@ -6,9 +6,10 @@ interface BrokerSummaryCardProps {
   emiten: string;
   dateRange: string;
   brokerSummary: BrokerSummaryData;
+  sector?: string;
 }
 
-export default function BrokerSummaryCard({ emiten, dateRange, brokerSummary }: BrokerSummaryCardProps) {
+export default function BrokerSummaryCard({ emiten, dateRange, brokerSummary, sector }: BrokerSummaryCardProps) {
   const { detector, topBuyers, topSellers } = brokerSummary;
 
   // Helper to format numbers
@@ -56,19 +57,21 @@ export default function BrokerSummaryCard({ emiten, dateRange, brokerSummary }: 
     <div className="broker-summary-card">
       {/* Header */}
       <div className="compact-header">
-        <div className="compact-ticker">+ {emiten.toUpperCase()}</div>
+        <div>
+          <div className="compact-ticker">+ {emiten.toUpperCase()}</div>
+          {sector && (
+            <div style={{ fontSize: '0.7rem', color: '#999', marginTop: '2px' }}>
+              {sector}
+            </div>
+          )}
+        </div>
         <div className="compact-date">
           <span className="compact-date-icon">📅</span>
           {dateRange}
         </div>
       </div>
 
-      {/* Filters row (static for now) */}
-      <div className="broker-filters">
-        <span className="broker-filter">All Investor</span>
-        <span className="broker-filter">Regular</span>
-        <span className="broker-filter">Net</span>
-      </div>
+
 
       {/* Top Broker Summary Table */}
       <div className="compact-section">

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchMarketDetector, fetchOrderbook, getTopBroker, parseLot, getBrokerSummary } from '@/lib/stockbit';
+import { fetchMarketDetector, fetchOrderbook, getTopBroker, parseLot, getBrokerSummary, fetchEmitenInfo } from '@/lib/stockbit';
 import { calculateTargets } from '@/lib/calculations';
 import { saveStockQuery, getLatestStockQuery } from '@/lib/supabase';
 import type { StockInput, ApiResponse } from '@/lib/types';
@@ -17,10 +17,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch data from both Stockbit APIs
-    const [marketDetectorData, orderbookData] = await Promise.all([
+    // Fetch data from both Stockbit APIs and emiten info
+    const [marketDetectorData, orderbookData, emitenInfoData] = await Promise.all([
       fetchMarketDetector(emiten, fromDate, toDate),
       fetchOrderbook(emiten),
+      fetchEmitenInfo(emiten).catch(() => null), // Don't fail if sector fetch fails
     ]);
 
     // Extract top broker data
@@ -74,6 +75,10 @@ export async function POST(request: NextRequest) {
 
     // Extract broker summary for the new card
     const brokerSummary = getBrokerSummary(marketDetectorData);
+
+    // Extract sector from emiten info
+    const sector = emitenInfoData?.data?.sector || undefined;
+
 
     // Extract market data
     // The API might return data wrapped in 'data' property or directly
@@ -137,12 +142,14 @@ export async function POST(request: NextRequest) {
           targetMax: calculated.targetMax,
         },
         brokerSummary,
+        sector,
       },
     };
 
     // Save to Supabase (non-blocking)
     saveStockQuery({
       emiten,
+      sector,
       from_date: fromDate,
       to_date: toDate,
       bandar: brokerData.bandar,

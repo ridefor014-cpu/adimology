@@ -1,4 +1,4 @@
-import type { MarketDetectorResponse, OrderbookResponse, BrokerData, WatchlistResponse, BrokerSummaryData } from './types';
+import type { MarketDetectorResponse, OrderbookResponse, BrokerData, WatchlistResponse, BrokerSummaryData, EmitenInfoResponse } from './types';
 import { getSessionValue } from './supabase';
 
 const STOCKBIT_BASE_URL = 'https://exodus.stockbit.com';
@@ -8,6 +8,14 @@ const STOCKBIT_AUTH_URL = 'https://stockbit.com';
 let cachedToken: string | null = null;
 let tokenLastFetched: number = 0;
 const TOKEN_CACHE_DURATION = 60000; // 1 minute
+
+// Cache sector data to reduce API calls
+const sectorCache = new Map<string, { sector: string; timestamp: number }>();
+const SECTOR_CACHE_DURATION = 3600000; // 1 hour
+
+// Cache for sectors list
+let sectorsListCache: { sectors: string[]; timestamp: number } | null = null;
+const SECTORS_LIST_CACHE_DURATION = 86400000; // 24 hours
 
 /**
  * Get JWT token from database or environment
@@ -97,6 +105,89 @@ export async function fetchOrderbook(emiten: string): Promise<OrderbookResponse>
 
   return response.json();
 }
+
+/**
+ * Fetch Emiten Info (including sector)
+ */
+export async function fetchEmitenInfo(emiten: string): Promise<EmitenInfoResponse> {
+  // Check cache first
+  const cached = sectorCache.get(emiten.toUpperCase());
+  const now = Date.now();
+  
+  if (cached && (now - cached.timestamp) < SECTOR_CACHE_DURATION) {
+    // Return cached data in the expected format
+    return {
+      data: {
+        sector: cached.sector,
+        sub_sector: '',
+        symbol: emiten,
+        name: '',
+        price: '0',
+        change: '0',
+        percentage: 0,
+      },
+      message: 'Successfully retrieved company data (cached)',
+    };
+  }
+
+  const url = `${STOCKBIT_BASE_URL}/emitten/${emiten}/info`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: await getHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Emiten Info API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data: EmitenInfoResponse = await response.json();
+  
+  // Cache the sector data
+  if (data.data?.sector) {
+    sectorCache.set(emiten.toUpperCase(), {
+      sector: data.data.sector,
+      timestamp: now,
+    });
+  }
+
+  return data;
+}
+
+/**
+ * Fetch all sectors list
+ */
+export async function fetchSectors(): Promise<string[]> {
+  const now = Date.now();
+  
+  // Check cache first
+  if (sectorsListCache && (now - sectorsListCache.timestamp) < SECTORS_LIST_CACHE_DURATION) {
+    return sectorsListCache.sectors;
+  }
+
+  const url = `${STOCKBIT_BASE_URL}/emitten/sectors`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: await getHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Sectors API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const sectors: string[] = (data.data || []).map((item: { name: string }) => item.name).filter(Boolean);
+  
+  // Cache the sectors list
+  sectorsListCache = {
+    sectors,
+    timestamp: now,
+  };
+
+  return sectors;
+}
+
 
 /**
  * Fetch Watchlist data

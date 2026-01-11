@@ -355,6 +355,13 @@ h3 {
 
 .compact-section {
   margin-bottom: 0.5rem;
+  border-top: 1px solid #eee;
+  padding-top: 0.35rem;
+}
+
+.compact-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
 }
 
 .compact-section-title {
@@ -364,13 +371,10 @@ h3 {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 0.35rem;
-  padding-top: 0.35rem;
-  border-top: 1px solid #eee;
 }
 
 .compact-section:first-of-type .compact-section-title {
-  border-top: none;
-  padding-top: 0;
+  margin-top: 0;
 }
 
 .compact-grid-2 {

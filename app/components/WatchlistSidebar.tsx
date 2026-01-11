@@ -69,20 +69,34 @@ export default function WatchlistSidebar({ onSelect }: WatchlistSidebarProps) {
               key={item.company_id || index} 
               className="watchlist-item"
               onClick={() => onSelect?.(item.symbol || item.company_code)}
+              style={{ padding: '0.65rem 0.75rem' }}
             >
-              <div style={{ fontWeight: 600 }}>{item.symbol || item.company_code}</div>
-              <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
-                  {item.last_price?.toLocaleString() || '-'}
-                </span>
-                <span style={{ 
-                  fontSize: '0.75rem', 
-                  color: isPositive ? 'var(--accent-success)' : 'var(--accent-warning)',
-                  minWidth: '50px',
-                  textAlign: 'right'
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.symbol || item.company_code}</div>
+                <div style={{ 
+                  fontSize: '0.7rem', 
+                  color: '#999', 
+                  marginTop: '2px', 
+                  maxWidth: '140px', 
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis', 
+                  whiteSpace: 'nowrap' 
                 }}>
-                  {isPositive ? '+' : ''}{percentValue.toFixed(2)}%
-                </span>
+                  {item.sector || item.company_name}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                  {item.formatted_price || item.last_price?.toLocaleString() || '-'}
+                </div>
+                <div style={{ 
+                  fontSize: '0.7rem', 
+                  color: isPositive ? 'var(--accent-success)' : 'var(--accent-warning)',
+                  marginTop: '1px',
+                  fontWeight: 500
+                }}>
+                  {isPositive ? '+' : ''}{item.percent}%
+                </div>
               </div>
             </div>
           );

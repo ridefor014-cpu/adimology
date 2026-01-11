@@ -20,7 +20,14 @@ export default function CompactResultCard({ result }: CompactResultCardProps) {
     <div className="compact-card">
       {/* Header */}
       <div className="compact-header">
-        <div className="compact-ticker">+ {input.emiten.toUpperCase()}</div>
+        <div>
+          <div className="compact-ticker">+ {input.emiten.toUpperCase()}</div>
+          {result.sector && (
+            <div style={{ fontSize: '0.7rem', color: '#999', marginTop: '2px' }}>
+              {result.sector}
+            </div>
+          )}
+        </div>
         <div className="compact-date">
           <span className="compact-date-icon">📅</span>
           {input.fromDate} — {input.toDate}

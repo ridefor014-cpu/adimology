@@ -303,6 +303,7 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
                 emiten={result.input.emiten}
                 dateRange={`${result.input.fromDate} — ${result.input.toDate}`}
                 brokerSummary={result.brokerSummary}
+                sector={result.sector}
               />
             )}
           </div>

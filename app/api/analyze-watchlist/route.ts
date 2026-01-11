@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchWatchlist, fetchMarketDetector, fetchOrderbook, getTopBroker } from '@/lib/stockbit';
+import { fetchWatchlist, fetchMarketDetector, fetchOrderbook, getTopBroker, fetchEmitenInfo } from '@/lib/stockbit';
 import { calculateTargets } from '@/lib/calculations';
 import { saveWatchlistAnalysis } from '@/lib/supabase';
 
@@ -40,23 +40,17 @@ export async function POST(request: NextRequest) {
       
       try {
         // Fetch market data for today
-        const [marketDetectorData, orderbookData] = await Promise.all([
+        const [marketDetectorData, orderbookData, emitenInfoData] = await Promise.all([
           fetchMarketDetector(emiten, today, today),
           fetchOrderbook(emiten),
+          fetchEmitenInfo(emiten).catch(() => null), // Don't fail if sector fetch fails
         ]);
 
         const brokerData = getTopBroker(marketDetectorData);
+        const sector = emitenInfoData?.data?.sector || undefined;
+
 
         if (!brokerData) {
-          // Save error status
-          await saveWatchlistAnalysis({
-            from_date: today,
-            to_date: today,
-            emiten,
-            status: 'error',
-            error_message: 'No broker data available'
-          });
-          
           errors.push({ emiten, error: 'No broker data' });
           continue;
         }
@@ -88,6 +82,7 @@ export async function POST(request: NextRequest) {
           from_date: today,
           to_date: today,
           emiten,
+          sector,
           bandar: brokerData.bandar,
           barang_bandar: brokerData.barangBandar,
           rata_rata_bandar: brokerData.rataRataBandar,
@@ -111,15 +106,6 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error(`Error analyzing ${emiten}:`, error);
         
-        // Save error to database
-        await saveWatchlistAnalysis({
-          from_date: today,
-          to_date: today,
-          emiten,
-          status: 'error',
-          error_message: error instanceof Error ? error.message : 'Unknown error'
-        }).catch(e => console.error('Failed to save error status:', e));
-
         errors.push({
           emiten,
           error: error instanceof Error ? error.message : 'Unknown error'

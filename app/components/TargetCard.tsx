@@ -1,12 +1,14 @@
 'use client';
 
 interface TargetCardProps {
+  emiten: string;
+  sector?: string;
   currentPrice: number;
   targetRealistis: number;
   targetMax: number;
 }
 
-export default function TargetCard({ currentPrice, targetRealistis, targetMax }: TargetCardProps) {
+export default function TargetCard({ emiten, sector, currentPrice, targetRealistis, targetMax }: TargetCardProps) {
   const calculateGain = (target: number) => {
     const gain = ((target - currentPrice) / currentPrice) * 100;
     return gain.toFixed(2);
@@ -15,6 +17,16 @@ export default function TargetCard({ currentPrice, targetRealistis, targetMax }:
   return (
     <div className="glass-card">
       <h3>🎯 Target Prices</h3>
+      <div style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
+        <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--accent-primary)' }}>
+          {emiten}
+        </div>
+        {sector && (
+          <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.25rem' }}>
+            {sector}
+          </div>
+        )}
+      </div>
       
       <div className="grid grid-2" style={{ marginTop: '1rem' }}>
         {/* Target Realistis */}

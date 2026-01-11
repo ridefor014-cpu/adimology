@@ -10,6 +10,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
  */
 export async function saveStockQuery(data: {
   emiten: string;
+  sector?: string;
   from_date?: string;
   to_date?: string;
   bandar?: string;
@@ -30,7 +31,7 @@ export async function saveStockQuery(data: {
 }) {
   const { data: result, error } = await supabase
     .from('stock_queries')
-    .insert([data])
+    .upsert([data], { onConflict: 'from_date,emiten' })
     .select();
 
   if (error) {
@@ -78,6 +79,7 @@ export async function saveWatchlistAnalysis(data: {
   from_date: string;  // analysis date
   to_date: string;    // same as from_date for daily analysis
   emiten: string;
+  sector?: string;
   bandar?: string;
   barang_bandar?: number;
   rata_rata_bandar?: number;
@@ -114,6 +116,7 @@ export async function saveWatchlistAnalysis(data: {
  */
 export async function getWatchlistAnalysisHistory(filters?: {
   emiten?: string;
+  sector?: string;
   fromDate?: string;
   toDate?: string;
   status?: string;
@@ -144,6 +147,9 @@ export async function getWatchlistAnalysisHistory(filters?: {
     if (emitenList.length > 0) { // Changed to always use .in() if emitens are present
       query = query.in('emiten', emitenList);
     }
+  }
+  if (filters?.sector) {
+    query = query.eq('sector', filters.sector);
   }
   if (filters?.fromDate) {
     query = query.gte('from_date', filters.fromDate);
